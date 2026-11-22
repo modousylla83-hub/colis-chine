@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Suivi colis Chine</title><meta name="theme-color" content="#e4002b"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,600;112,800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calme, pratique, comme un cahier de bord de transitaire
+   IDEA: le bordereau d'expédition — chaque envoi est une étiquette avec son trajet
+   PICTURE: la liste des envois elle-même, avec la ligne Chine → Dakar sur chaque carte
+   COLOUR and TYPE: blanc, noir, rouge signal #e4002b, un gris ; Archivo large 800 + Archivo
+   LAYOUT: une colonne pour téléphone, chiffres clés en haut, cartes empilées */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f2f2f2);--mut:light-dark(#6b6b6b,#a3a3a3);--line:light-dark(#e3e3e3,#2a2a2a);--card:light-dark(#fff,#161616);--red:#e4002b;--ok:light-dark(#0a7a3d,#4cd28a);--warn:light-dark(#b45309,#f5a524);--soft:light-dark(#f4f4f4,#1d1d1d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:720px;margin:0 auto;padding:18px 16px 90px}
+header{border-top:6px solid var(--ink);padding-top:12px}
+h1{font:800 clamp(26px,7vw,38px)/1.05 Archivo,sans-serif;font-stretch:112%;margin:0;text-wrap:balance}
+.sub{color:var(--mut);font-size:14px;margin:4px 0 0}
+.save{font-size:13px;color:var(--mut);margin-top:6px;min-height:20px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:16px 0}
+.kpi{background:var(--bg);padding:10px}
+.kpi b{display:block;font:800 clamp(18px,5.5vw,26px)/1.1 Archivo;font-stretch:112%;white-space:nowrap}
+.kpi span{font-size:13px;color:var(--mut)}
+.kpi.due b{color:var(--red)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:0 14px;height:40px;font:600 15px Archivo;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input,select,textarea{font:16px Archivo;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+#q{flex:1 1 160px;height:40px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--red);outline-offset:1px}
+.card{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--ink);border-radius:6px;padding:14px;margin-bottom:12px}
+.card.s-probleme{border-left-color:var(--red)}.card.s-recupere{border-left-color:var(--ok)}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fac{font-size:13px;color:var(--mut)}
+.what{font:700 18px/1.25 Archivo;margin:2px 0 0}
+.amt{font:800 20px Archivo;font-stretch:112%;white-space:nowrap;text-align:right}
+.pill{display:inline-block;font:600 12px Archivo;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pay{background:light-dark(#e3f5ea,#123222);color:var(--ok)}.unpay{background:light-dark(#fde5ea,#3a1219);color:var(--red)}
+.route{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:14px 0 6px;position:relative}
+.route:before{content:"";position:absolute;left:12.5%;right:12.5%;top:7px;height:2px;background:var(--line)}
+.st{text-align:center;font-size:12px;color:var(--mut);position:relative}
+.st i{display:block;width:16px;height:16px;border-radius:50%;margin:0 auto 4px;background:var(--bg);border:2px solid var(--line)}
+.st.done i{background:var(--ink);border-color:var(--ink)}.st.done{color:var(--ink)}
+.st.now i{background:var(--red);border-color:var(--red);box-shadow:0 0 0 4px light-dark(#fde5ea,#3a1219)}.st.now{color:var(--ink);font-weight:600}
+.st small{display:block;font-size:11px;white-space:nowrap}
+.alert{font-size:14px;font-weight:600;margin:8px 0 0;padding:8px 10px;border-radius:6px;background:var(--soft)}
+.alert.w{color:var(--warn)}.alert.r{color:var(--red)}.alert.g{color:var(--ok)}
+.note{font-size:14px;color:var(--mut);margin:8px 0 0}
+details.more{margin-top:8px;font-size:14px}details.more summary{cursor:pointer;color:var(--mut);min-height:32px}
+dl{display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:4px 10px;margin:6px 0 0}dt{color:var(--mut)}dd{margin:0;overflow-wrap:anywhere}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{height:44px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 15px Archivo;cursor:pointer;flex:1 1 auto}
+.btn.main{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.red{color:var(--red)}
+.empty{text-align:center;color:var(--mut);padding:30px 0}
+.fab{position:fixed;left:16px;bottom:16px;height:52px;padding:0 20px;border-radius:999px;border:0;background:var(--red);color:#fff;font:700 16px Archivo;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
+h2{font:800 22px Archivo;font-stretch:112%;margin:28px 0 8px;border-top:3px solid var(--ink);padding-top:10px}
+.info dl{grid-template-columns:9.5em minmax(0,1fr);font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.modal.on{display:flex}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:92vh;overflow:auto;border-radius:14px 14px 0 0;padding:18px 16px 24px}
+.sheet h3{font:800 22px Archivo;margin:0 0 12px}
+.f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.f label{font-size:13px;color:var(--mut);display:block}.f .w{grid-column:1/-1}
+.toast{position:fixed;left:16px;right:16px;bottom:80px;max-width:420px;margin:auto;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;display:none;justify-content:space-between;gap:10px;align-items:center;z-index:8}
+.toast.on{display:flex}.toast button{background:none;border:0;color:var(--red);font:700 15px Archivo;min-height:36px;cursor:pointer}
+@media(prefers-reduced-motion:no-preference){.card{animation:in .25s ease-out}@keyframes in{from{opacity:0;transform:translateY(6px)}}}
+</style></head><body>
+<div id="app"></div>
+<script type="application/json" id="data">{"envois":[
+{"id":"e1","facture":"26-26A","contenu":"Répéteur","statut":"recupere","commande":"","chine":"2026-07-09","dakar":"2026-07-27","montant":14960,"paye":true,"transport":"Avion","cbm":0.01,"kg":1.7,"nb":1,"suivi":"YT7631561278652","payeLe":"","note":"Reçu de paiement non trouvé dans la discussion."},
+{"id":"e2","facture":"26-100","contenu":"Sac d'emballage","statut":"recupere","commande":"","chine":"2026-06-21","dakar":"2026-10-12","montant":16650,"paye":true,"transport":"Bateau","cbm":0.09,"kg":20.2,"nb":1,"suivi":"YT7628127168937","payeLe":"2026-10-12","note":"Payé par Wave."},
+{"id":"e3","facture":"26-104","contenu":"Sac d'emballage","statut":"recupere","commande":"","chine":"2026-06-21","dakar":"2026-10-14","montant":9250,"paye":true,"transport":"Bateau","cbm":0.05,"kg":8.9,"nb":1,"suivi":"YT7628125235426","payeLe":"2026-10-14","note":"Payé par Wave."},
+{"id":"e4","facture":"26-106","contenu":"Sac d'emballage","statut":"recupere","commande":"","chine":"2026-06-24","dakar":"2026-11-09","montant":7400,"paye":true,"transport":"Bateau","cbm":0.04,"kg":11.2,"nb":1,"suivi":"79013230275493","payeLe":"2026-11-09","note":"Payé par Wave. Récupéré."},
+{"id":"e5","facture":"26-182","contenu":"Sachet d'emballage + sac d'emballage","statut":"chine","commande":"","chine":"2026-10-26","dakar":"","montant":27000,"paye":false,"transport":"Bateau","cbm":0.15,"kg":26.1,"nb":2,"suivi":"YT7651945712987 / YT7651974453754","payeLe":"","note":"Sachet 0,03 CBM (5 400 CFA) + sac 0,12 CBM (21 600 CFA). Achat Alibaba des 10 000 sachets : c'est bien cet envoi (selon vous).","achat":80,"devise":"USD","taux":null,"pieces":10000,"fournisseur":"Yiwu Tongheng Packaging Co., Ltd. (Alibaba)","refAchat":"Commande Alibaba n° 318677459501027678 du 22/10/2026 : sachets plastique transparents à zip, 160 microns, 9×13+3 cm, 10 000 pièces × 0,008 USD"},
+{"id":"e6","facture":"26-185","contenu":"Boîtes à lunch","statut":"chine","commande":"","chine":"2026-10-30","dakar":"","montant":18000,"paye":false,"transport":"Bateau","cbm":0.1,"kg":null,"nb":2,"suivi":"760253456206","payeLe":"","note":"Le message du 16/11 écrit DKR12465 (faute). La facture dit bien DKR12467. Lien avec l'achat Alibaba : À confirmer.","achat":27.6,"devise":"USD","taux":null,"pieces":2000,"fournisseur":"Linyi Zhongfei International Trade Co., Ltd. (Alibaba)","refAchat":"Commande Alibaba n° 320524298001027678 du 27/10/2026 : pots à sauce PP avec couvercle P4 85 ml, 2 cartons × 1000 pièces × 13,80 USD"},
+{"id":"e7","facture":"","contenu":"2 sachets d'emballage","statut":"chine","commande":"","chine":"2026-11-09","dakar":"","montant":10800,"paye":false,"transport":"Bateau","cbm":0.06,"kg":9.6,"nb":2,"suivi":"654809594… / 654803235… (numéros coupés sur la photo)","payeLe":"","note":"Facture pas encore reçue. Le fournisseur a fait 2 emballages au lieu d'un. Lien avec l'achat Alibaba : À confirmer.","achat":33,"devise":"USD","taux":null,"pieces":3000,"fournisseur":"Yiwu Tongheng Packaging Co., Ltd. (Alibaba)","refAchat":"Commande Alibaba n° 321413854501027678 du 05/11/2026 : sachets plastique transparents à zip, 160 microns, 10×15+3 cm, 3000 pièces × 0,011 USD"}
+]}</script>
+<script id="appjs">{
+const STEPS=[["commande","Commandé"],["chine","Chine"],["dakar","Dakar"],["recupere","Récupéré"]];
+const LAB={commande:"Commandé",chine:"Arrivé en Chine",dakar:"Arrivé à Dakar",recupere:"Récupéré",probleme:"Problème"};
+const KEY='suiviColisChine_v1',BKEY='suiviColisChine_backup';
+const store={get(k){try{return localStorage.getItem(k)}catch(_){return null}},set(k,v){try{localStorage.setItem(k,v);return true}catch(_){return false}}};
+let S=JSON.parse(document.getElementById('data').textContent);
+{const raw=store.get(KEY);if(raw){try{const x=JSON.parse(raw);if(x&&Array.isArray(x.envois))S=x}catch(_){}}else store.set(KEY,JSON.stringify(S));}
+let filt='cours',q='',editing=null,prev=null;
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=n=>(Number(n)||0).toLocaleString('fr-FR').replace(/ | /g,' ')+' CFA';
+const fd=d=>d?d.split('-').reverse().join('/'):'';
+const today=()=>new Date().toISOString().slice(0,10);
+const days=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+const addD=(d,n)=>{const x=new Date(d);x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+
+function shell(){
+  $('#app').innerHTML=`<div class="wrap"><header><h1>Suivi colis Chine</h1><p class="sub">Holly Trans · code client DKR12467</p><div class="save" id="save"></div></header>
+  <div class="kpis" id="kpis"></div>
+  <div class="bar"><button class="chip" data-f="cours">En cours</button><button class="chip" data-f="fini">Récupérés</button><button class="chip" data-f="tous">Tous</button><input id="q" type="search" placeholder="Chercher (facture, contenu…)" aria-label="Chercher"></div>
+  <div id="list"></div>
+  <h2>Sauvegarde</h2><p class="note" id="bk"></p><div class="acts"><button class="btn main" data-a="bkdl">Télécharger une copie</button><button class="btn" data-a="bkshare">Envoyer la copie</button><button class="btn" data-a="bkload">Restaurer une copie</button></div><input type="file" id="bkfile" accept=".json,application/json" hidden>
+  <h2>Infos Holly Trans</h2><div class="info"><dl>
+  <dt>Prix bateau</dt><dd>185 000 CFA par CBM (mètre cube) jusqu'en septembre 2026, 180 000 CFA depuis octobre.</dd>
+  <dt>Prix avion</dt><dd>Depuis le 1er octobre : 4 à 10 kg = 8 800 CFA/kg, 10 à 50 kg = 7 800 CFA/kg. Minimum facturé : 4 kg.</dd>
+  <dt>Minimum bateau</dt><dd>Colis de 4 kg.</dd>
+  <dt>Changer de transport</dt><dd>5 000 CFA par colis, après réception en Chine.</dd>
+  <dt>Délai bateau</dt><dd>Environ 3 à 4 mois (constaté sur les colis de juin).</dd>
+  <dt>Stockage à Dakar</dt><dd>15 jours gratuits après l'avis d'arrivée, puis 1 000 CFA par CBM et par jour. Abandon après 1 mois.</dd>
+  <dt>Réclamation</dt><dd>7 jours maximum après le retrait.</dd>
+  <dt>Pour retirer</dt><dd>Code + nom sur facture + capture du paiement.</dd>
+  <dt>Paiement</dt><dd>OM (Orange Money) code marchand 487303, ou Wave Holly Trans.</dd>
+  <dt>Entrepôt Dakar</dt><dd>Rond-point Camberène, route de la clinique ophtalmologique Mohamed 6, 4e dépôt. 9h–16h du lundi au vendredi, pause 13h30–14h30.</dd>
+  <dt>Interdit avion</dt><dd>Parfum, power bank, batterie, fronde, spray.</dd>
+  <dt>Interdit partout</dt><dd>Briquet, drone, produit chimique ou peinture sans fiche de sécurité, cigarette, batterie lithium de plus de 100 Wh, charbon, militaire, extincteur, inflammable.</dd>
+  </dl></div></div>
+  <button class="fab" id="add">+ Nouvelle commande</button>
+  <div class="modal" id="modal"><form class="sheet" id="form"></form></div>
+  <div class="toast" id="toast"><span id="tmsg"></span><button type="button" id="undo">Annuler</button></div>`;
+}
+
+function alertFor(e){
+  if(e.statut!=='dakar'||!e.dakar)return '';
+  const end=addD(e.dakar,15),left=days(today(),end),late=days(e.dakar,today());
+  if(late>=30)return `<p class="alert r">Plus d'un mois à l'entrepôt : risque d'abandon.</p>`;
+  if(left<0)return `<p class="alert r">Stockage payant depuis ${-left} jour${-left>1?'s':''} (gratuit jusqu'au ${fd(end)}).</p>`;
+  return `<p class="alert ${left<=3?'w':'g'}">Stockage gratuit encore ${left} jour${left>1?'s':''} (jusqu'au ${fd(end)}).</p>`;
+}
+function route(e){
+  const idx=STEPS.findIndex(s=>s[0]===e.statut);
+  const dates={commande:e.commande,chine:e.chine,dakar:e.dakar,recupere:''};
+  return `<div class="route">${STEPS.map(([k,l],i)=>`<div class="st ${idx>i||e.statut==='recupere'?'done':idx===i?'now':''}"><i></i>${l}<small>${fd(dates[k])}</small></div>`).join('')}</div>`;
+}
+function cost(e){
+  if(e.achat==null||e.achat==='')return '';
+  const dev=e.devise||'CFA',cfa=dev==='CFA'?+e.achat:(e.taux?+e.achat*+e.taux:null);
+  const n=v=>String(v).replace('.',',');
+  let h=`<dt>Achat</dt><dd>${n(e.achat)} ${esc(dev)}${dev==='USD'?' (dollar américain)':dev==='RMB'?' (yuan chinois)':''}</dd>`;
+  if(e.fournisseur)h+=`<dt>Fournisseur</dt><dd>${esc(e.fournisseur)}</dd>`;
+  if(e.refAchat)h+=`<dt>Commande</dt><dd>${esc(e.refAchat)}</dd>`;
+  if(e.pieces)h+=`<dt>Pièces</dt><dd>${(+e.pieces).toLocaleString('fr-FR').replace(/\u202f|\u00a0/g,' ')}</dd>`;
+  if(cfa==null){h+=`<dt>Coût total</dt><dd>Taux de change à donner</dd>`;return h}
+  const tot=cfa+(+e.montant||0);
+  h+=`<dt>Achat en CFA</dt><dd>${money(Math.round(cfa))}</dd><dt>Coût total</dt><dd><b>${money(Math.round(tot))}</b> (achat + transport)</dd>`;
+  if(e.pieces)h+=`<dt>Coût par pièce</dt><dd>${(tot/e.pieces).toFixed(1).replace('.',',')} CFA</dd>`;
+  return h;
+}
+function card(e){
+  const next=STEPS.findIndex(s=>s[0]===e.statut)+1;
+  const nextLab=next>0&&next<4?STEPS[next][1]:'';
+  return `<article class="card s-${e.statut}"><div class="top"><div><div class="fac">${e.facture?'Facture '+esc(e.facture):'Facture pas encore reçue'} · ${esc(e.transport)}</div><p class="what">${esc(e.contenu)}</p></div>
+  <div><div class="amt">${e.montant?money(e.montant):'—'}</div><div style="text-align:right"><span class="pill ${e.paye?'pay':'unpay'}">${e.paye?'Payé':'À payer'}</span></div></div></div>
+  ${e.statut==='probleme'?'<p class="alert r">Problème signalé</p>':route(e)}${alertFor(e)}
+  ${e.achat!=null&&e.achat!==''?`<p class="note"><b>Achat :</b> ${String(e.achat).replace('.',',')} ${esc(e.devise||'CFA')}</p>`:''}${e.note?`<p class="note">${esc(e.note)}</p>`:''}
+  <details class="more"><summary>Détails</summary><dl>
+  <dt>Statut</dt><dd>${LAB[e.statut]}</dd>
+  ${e.commande?`<dt>Commandé le</dt><dd>${fd(e.commande)}</dd>`:''}
+  <dt>Volume</dt><dd>${e.cbm!=null&&e.cbm!==''?String(e.cbm).replace('.',',')+' CBM (mètre cube)':'—'}</dd>
+  <dt>Poids</dt><dd>${e.kg!=null&&e.kg!==''?String(e.kg).replace('.',',')+' kg':'—'}</dd>
+  <dt>Nombre de colis</dt><dd>${esc(e.nb||'—')}</dd>
+  <dt>N° de suivi</dt><dd>${esc(e.suivi||'—')}</dd>
+  ${e.payeLe?`<dt>Payé le</dt><dd>${fd(e.payeLe)}</dd>`:''}
+  ${cost(e)}
+  </dl></details>
+  <div class="acts">${nextLab?`<button class="btn main" data-a="next" data-id="${e.id}">→ ${nextLab}</button>`:''}
+  ${e.paye?'':`<button class="btn" data-a="pay" data-id="${e.id}">Marquer payé</button>`}
+  <button class="btn" data-a="edit" data-id="${e.id}">Modifier</button></div></article>`;
+}
+function render(){
+  const L=S.envois;
+  const paid=L.filter(e=>e.paye).reduce((a,e)=>a+(+e.montant||0),0);
+  const due=L.filter(e=>!e.paye).reduce((a,e)=>a+(+e.montant||0),0);
+  const open=L.filter(e=>e.statut!=='recupere').length;
+  $('#kpis').innerHTML=`<div class="kpi"><b>${money(paid).replace(' CFA','')}</b><span>Payé (CFA)</span></div><div class="kpi due"><b>${money(due).replace(' CFA','')}</b><span>À payer (CFA)</span></div><div class="kpi"><b>${open}</b><span>En cours</span></div>`;
+  document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.f===filt));
+  const order={dakar:0,probleme:1,chine:2,commande:3,recupere:4};
+  let v=L.filter(e=>filt==='tous'||(filt==='cours'?e.statut!=='recupere':e.statut==='recupere'));
+  if(q)v=v.filter(e=>(e.facture+' '+e.contenu+' '+e.suivi+' '+e.note).toLowerCase().includes(q));
+  v.sort((a,b)=>order[a.statut]-order[b.statut]||(b.chine||b.commande||'').localeCompare(a.chine||a.commande||''));
+  $('#list').innerHTML=v.length?v.map(card).join(''):`<p class="empty">Aucun envoi ici.</p>`;
+}
+function status(t){const s=$('#save');if(s)s.textContent=t}
+
+function save(){
+  render();
+  status(store.set(KEY,JSON.stringify(S))?'Enregistré sur le téléphone ✓':'Erreur : le téléphone n\'a pas pu enregistrer.');
+  backupHint();
+}
+function change(fn,msg){prev=JSON.stringify(S);fn();save();toast(msg)}
+function toast(m){const t=$('#toast');$('#tmsg').textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),5000)}
+
+function openForm(e){
+  editing=e?e.id:null;
+  const x=e||{facture:'',contenu:'',statut:'commande',commande:today(),chine:'',dakar:'',montant:'',paye:false,transport:'Bateau',cbm:'',kg:'',nb:1,suivi:'',payeLe:'',note:''};
+  const opt=(arr,v)=>arr.map(([k,l])=>`<option value="${k}"${k===v?' selected':''}>${l}</option>`).join('');
+  $('#form').innerHTML=`<h3>${e?'Modifier l\'envoi':'Nouvelle commande'}</h3><div class="f">
+  <div class="w"><label for="contenu">Contenu *</label><input id="contenu" required value="${esc(x.contenu)}"></div>
+  <div><label for="facture">N° facture</label><input id="facture" value="${esc(x.facture)}"></div>
+  <div><label for="transport">Transport</label><select id="transport">${opt([['Bateau','Bateau'],['Avion','Avion']],x.transport)}</select></div>
+  <div><label for="statut">Statut</label><select id="statut">${opt(Object.entries(LAB),x.statut)}</select></div>
+  <div><label for="montant">Montant (CFA)</label><input id="montant" inputmode="numeric" value="${esc(x.montant)}"></div>
+  <div><label for="commande">Commandé le</label><input id="commande" type="date" value="${x.commande}"></div>
+  <div><label for="chine">Arrivé en Chine</label><input id="chine" type="date" value="${x.chine}"></div>
+  <div><label for="dakar">Arrivé à Dakar</label><input id="dakar" type="date" value="${x.dakar}"></div>
+  <div><label for="paye">Payé ?</label><select id="paye">${opt([['non','Non'],['oui','Oui']],x.paye?'oui':'non')}</select></div>
+  <div><label for="payeLe">Payé le</label><input id="payeLe" type="date" value="${x.payeLe}"></div>
+  <div><label for="cbm">Volume (CBM)</label><input id="cbm" inputmode="decimal" value="${esc(x.cbm??'')}"></div>
+  <div><label for="kg">Poids (kg)</label><input id="kg" inputmode="decimal" value="${esc(x.kg??'')}"></div>
+  <div><label for="nb">Nb colis</label><input id="nb" inputmode="numeric" value="${esc(x.nb??'')}"></div>
+  <div class="w"><label for="suivi">N° de suivi</label><input id="suivi" value="${esc(x.suivi)}"></div>
+  <div><label for="achat">Prix d'achat</label><input id="achat" inputmode="decimal" value="${esc(x.achat??'')}"></div>
+  <div><label for="devise">Monnaie</label><select id="devise">${opt([['USD','USD (dollar)'],['RMB','RMB (yuan)'],['CFA','CFA']],x.devise||'USD')}</select></div>
+  <div><label for="taux">Taux (CFA pour 1)</label><input id="taux" inputmode="decimal" value="${esc(x.taux??'')}"></div>
+  <div><label for="pieces">Nb de pièces</label><input id="pieces" inputmode="numeric" value="${esc(x.pieces??'')}"></div>
+  <div class="w"><label for="fournisseur">Fournisseur</label><input id="fournisseur" value="${esc(x.fournisseur||'')}"></div>
+  <div class="w"><label for="refAchat">Réf. commande</label><input id="refAchat" value="${esc(x.refAchat||'')}"></div>
+  <div class="w"><label for="note">Remarque</label><textarea id="note" rows="2">${esc(x.note)}</textarea></div></div>
+  <div class="acts"><button class="btn main" type="submit">Enregistrer</button><button class="btn" type="button" data-a="close">Fermer</button>${e?'<button class="btn red" type="button" data-a="del">Supprimer</button>':''}</div>`;
+  $('#modal').classList.add('on');$('#contenu').focus();
+}
+const num=v=>{v=String(v).replace(/\s/g,'').replace(',','.');return v===''?null:Number(v)};
+
+function backupHint(){const el=$('#bk');if(!el)return;const d=store.get(BKEY);
+  if(!d){el.innerHTML='<b style="color:var(--red)">Aucune copie faite.</b> Faites une copie de temps en temps : si le téléphone est perdu ou changé, la copie permet de tout retrouver.';return}
+  const n=days(d,today());el.innerHTML=`Dernière copie : ${fd(d)}${n>7?' — <b style="color:var(--red)">pensez à en refaire une</b>':''}.`}
+function backupFile(){return new File([JSON.stringify(S,null,1)],`suivi-colis-${today()}.json`,{type:'application/json'})}
+function doDownload(){const f=backupFile(),u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);store.set(BKEY,today());backupHint();toast('Copie téléchargée')}
+async function doShare(){const f=backupFile();if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Suivi colis Chine'});store.set(BKEY,today());backupHint()}catch(_){}}else doDownload()}
+shell();render();backupHint();status('Les données restent sur ce téléphone.');
+$('#bkfile').addEventListener('change',async ev=>{const f=ev.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x||!Array.isArray(x.envois))throw 0;prev=JSON.stringify(S);S=x;save();toast(`Copie restaurée : ${x.envois.length} envois`)}catch(_){toast('Ce fichier n\'est pas une copie valable')}ev.target.value=''});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a],[data-f],#add,#undo');if(!b)return;
+  if(b.dataset.f){filt=b.dataset.f;render();return}
+  if(b.id==='add'){openForm(null);return}
+  if(b.id==='undo'){if(prev){S=JSON.parse(prev);prev=null;save();$('#toast').classList.remove('on')}return}
+  const a=b.dataset.a,e=S.envois.find(x=>x.id===b.dataset.id);
+  if(a==='next'&&e){const i=STEPS.findIndex(s=>s[0]===e.statut)+1;const k=STEPS[i][0];change(()=>{e.statut=k;if(k!=='recupere'&&!e[k])e[k]=today()},`${e.contenu} → ${STEPS[i][1]}`)}
+  if(a==='pay'&&e)change(()=>{e.paye=true;if(!e.payeLe)e.payeLe=today()},`${e.contenu} : payé`);
+  if(a==='edit'&&e)openForm(e);
+  if(a==='close')$('#modal').classList.remove('on');
+  if(a==='bkdl')doDownload();
+  if(a==='bkshare')doShare();
+  if(a==='bkload')$('#bkfile').click();
+  if(a==='del'){if(b.dataset.sure){const id=editing;change(()=>{S.envois=S.envois.filter(x=>x.id!==id)},'Envoi supprimé');$('#modal').classList.remove('on')}else{b.dataset.sure=1;b.textContent='Confirmer la suppression'}}
+});
+document.addEventListener('submit',ev=>{
+  ev.preventDefault();const g=id=>$('#'+id).value.trim();
+  const d={contenu:g('contenu'),facture:g('facture'),transport:g('transport'),statut:g('statut'),montant:num(g('montant')),commande:g('commande'),chine:g('chine'),dakar:g('dakar'),paye:g('paye')==='oui',payeLe:g('payeLe'),cbm:num(g('cbm')),kg:num(g('kg')),nb:num(g('nb')),suivi:g('suivi'),note:g('note'),achat:num(g('achat')),devise:g('devise'),taux:num(g('taux')),pieces:num(g('pieces')),fournisseur:g('fournisseur'),refAchat:g('refAchat')};
+  if(!d.contenu)return;
+  const id=editing;
+  change(()=>{if(id)Object.assign(S.envois.find(x=>x.id===id),d);else S.envois.push({id:'e'+Date.now(),...d})},id?'Envoi modifié':'Commande ajoutée');
+  $('#modal').classList.remove('on');
+});
+document.addEventListener('input',ev=>{if(ev.target.id==='q'){q=ev.target.value.trim().toLowerCase();render()}});
+$('#modal').addEventListener('click',ev=>{if(ev.target.id==='modal')$('#modal').classList.remove('on')});
+}</script></body></html>
